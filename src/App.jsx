@@ -13,6 +13,8 @@ import RegisterForm from './components/auth/RegisterForm'
 import GameBoard from './components/game/GameBoard'
 import WalletPage from './components/wallet/WalletPage'
 import GameHistoryPage from './components/game_history/GameHistory'
+import DiceSumGame from './components/game/DiceSumGameBoard.jsx'
+import Footer from './components/layout/Footer.jsx'
 
 const PrivateRoute = ({ children }) => {
     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated)
@@ -23,7 +25,8 @@ const AppLayout = ({ children }) => {
     return (
         <div className="min-h-screen bg-gray-900">
             <Navbar />
-            <main className="pt-4">{children}</main>
+            <div className="pt-4">{children}</div>
+            <Footer />
         </div>
     )
 }
@@ -70,6 +73,14 @@ const App = () => {
                         element={
                             <PrivateRoute>
                                 <GameBoard />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/dice-sum"
+                        element={
+                            <PrivateRoute>
+                                <DiceSumGame />
                             </PrivateRoute>
                         }
                     />

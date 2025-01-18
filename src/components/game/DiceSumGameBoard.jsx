@@ -1,4 +1,4 @@
-// src/components/game/GameBoard.jsx
+// src/components/game/DiceSumGameBoard.jsx
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -11,15 +11,14 @@ import {
 } from '../../store/slices/gameSlice'
 import { updateBalance } from '../../store/slices/walletSlice'
 import {
+    ArrowDown,
+    ArrowUp,
     Dice1,
     Dice2,
     Dice3,
     Dice4,
     Dice5,
     Dice6,
-    ArrowUp,
-    ArrowDown,
-    Minus,
     Equal,
 } from 'lucide-react'
 import WalletSection from './WalletSection.jsx'
@@ -28,11 +27,12 @@ import GameHistory from './GameHistory.jsx'
 const STAKE_OPTIONS = [
     10, 50, 100, 200, 500, 1000, 5000, 10000, 20000, 50000, 100000, 500000,
 ]
+const SUM_OPTIONS = Array.from({ length: 11 }, (_, i) => i + 2) // [2, 3, 4, ..., 12]
 
-const GameBoard = () => {
+const DiceSumGame = () => {
     const dispatch = useDispatch()
     const { stake, selectedOption, diceResults, isRolling } = useSelector(
-        (state) => state.game.upDownEqual
+        (state) => state.game.diceSum
     )
     const { balance } = useSelector((state) => state.wallet)
     const [error, setError] = useState('')
@@ -52,34 +52,31 @@ const GameBoard = () => {
             return
         }
         setError('')
-        dispatch(setStake({ gameType: 'upDownEqual', amount: value }))
+        dispatch(setStake({ gameType: 'diceSum', amount: value }))
     }
 
     const handleOptionSelect = (option) => {
-        dispatch(setSelectedOption({ gameType: 'upDownEqual', option }))
+        dispatch(setSelectedOption({ gameType: 'diceSum', option }))
+    }
+
+    const getMultiplier = (sum) => {
+        return sum === 2 || sum === 12 ? 5.8 : 1.8
     }
 
     const rollDice = () => {
         if (!stake || !selectedOption) {
-            setError('Please set stake and select an option')
-            return
-        }
-        if (stake > balance) {
-            setError('Insufficient balance')
+            setError('Please set stake and select a number')
             return
         }
 
-        dispatch(setIsRolling({ gameType: 'upDownEqual', isRolling: true }))
+        dispatch(setIsRolling({ gameType: 'diceSum', isRolling: true }))
 
         // Simulate dice rolling animation
         const rollInterval = setInterval(() => {
             const dice1 = Math.floor(Math.random() * 6) + 1
             const dice2 = Math.floor(Math.random() * 6) + 1
             dispatch(
-                setDiceResults({
-                    gameType: 'upDownEqual',
-                    results: [dice1, dice2],
-                })
+                setDiceResults({ gameType: 'diceSum', results: [dice1, dice2] })
             )
         }, 100)
 
@@ -91,24 +88,14 @@ const GameBoard = () => {
             const sum = finalDice1 + finalDice2
             dispatch(
                 setDiceResults({
-                    gameType: 'upDownEqual',
+                    gameType: 'diceSum',
                     results: [finalDice1, finalDice2],
                 })
             )
 
-            let won = false
-            let winAmount = 0
-
-            if (selectedOption === 'up' && sum > 6) {
-                won = true
-                winAmount = stake * 1.8
-            } else if (selectedOption === 'down' && sum < 6) {
-                won = true
-                winAmount = stake * 1.8
-            } else if (selectedOption === 'equal' && sum === 6) {
-                won = true
-                winAmount = stake * 5.8
-            }
+            const won = sum === selectedOption
+            const multiplier = getMultiplier(sum)
+            const winAmount = won ? stake * multiplier : 0
 
             const newBalance = won
                 ? balance + winAmount - stake
@@ -117,29 +104,24 @@ const GameBoard = () => {
 
             dispatch(
                 addToHistory({
-                    gameType: 'upDownEqual',
+                    gameType: 'diceSum',
                     gameData: {
                         stake,
-                        selectedOption,
+                        selectedNumber: selectedOption,
                         diceResults: [finalDice1, finalDice2],
                         sum,
                         won,
-                        winAmount: won ? winAmount : 0,
+                        multiplier,
+                        winAmount,
                         timestamp: new Date().toISOString(),
                     },
                 })
             )
 
-            dispatch(
-                setIsRolling({ gameType: 'upDownEqual', isRolling: false })
-            )
-            setTimeout(
-                () => dispatch(resetGame({ gameType: 'upDownEqual' })),
-                2000
-            )
+            dispatch(setIsRolling({ gameType: 'diceSum', isRolling: false }))
+            setTimeout(() => dispatch(resetGame({ gameType: 'diceSum' })), 2000)
         }, 2000)
     }
-
     const DiceComponent = ({ value }) => {
         const Icon = diceIcons[value] || Dice1
         return <Icon size={64} className="text-white" />
@@ -161,7 +143,7 @@ const GameBoard = () => {
                 <div className="bg-gray-800 rounded-lg shadow-xl p-4 md:p-8">
                     <div className="flex justify-between items-center mb-8">
                         <h2 className="text-3xl font-bold text-white">
-                            Up Or Down Game
+                            Dice Sum Game
                         </h2>
                         <div className="hidden lg:block text-white">
                             Balance:{' '}
@@ -172,6 +154,7 @@ const GameBoard = () => {
                     </div>
 
                     <div className="space-y-8">
+                        {/* Stake Selection */}
                         <div className="bg-gray-700 p-4 md:p-6 rounded-lg">
                             <h3 className="text-xl text-white mb-4">
                                 Select Stake Amount
@@ -194,16 +177,49 @@ const GameBoard = () => {
                                 ))}
                             </div>
                         </div>
+
                         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2">
                                 <div className="bg-gray-800 rounded-lg shadow-xl ">
                                     <div className="flex justify-center items-center mb-8">
                                         <h2 className="text-3xl font-bold text-white">
-                                            Try Hard, Win Big.
+                                            Your Turn to Shine.
                                         </h2>
                                     </div>
 
                                     <div className="space-y-8">
+                                        <div className="bg-gray-700 p-4 md:p-6 rounded-lg">
+                                            <h3 className="text-xl text-white mb-4">
+                                                Select Target Result
+                                            </h3>
+                                            <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                                                {SUM_OPTIONS.map((num) => (
+                                                    <button
+                                                        key={num}
+                                                        onClick={() =>
+                                                            handleOptionSelect(
+                                                                num
+                                                            )
+                                                        }
+                                                        className={`p-4 rounded-lg font-bold text-lg transition duration-200 ${
+                                                            selectedOption ===
+                                                            num
+                                                                ? 'bg-purple-600 text-white'
+                                                                : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                                                        }`}
+                                                    >
+                                                        {num}
+                                                        <div className="text-xs mt-1">
+                                                            {num === 2 ||
+                                                            num === 12
+                                                                ? '5.8x'
+                                                                : '1.8x'}
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
                                         <div className="bg-gray-700 p-6 rounded-lg">
                                             <h3 className="text-xl text-white mb-4">
                                                 Your Bet Amount:
@@ -214,54 +230,6 @@ const GameBoard = () => {
                                             >
                                                 {stake}
                                             </h5>
-                                        </div>
-
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <button
-                                                onClick={() =>
-                                                    handleOptionSelect('up')
-                                                }
-                                                className={`p-6 rounded-lg font-bold text-lg transition duration-200 flex flex-col items-center ${
-                                                    selectedOption === 'up'
-                                                        ? 'bg-green-600 text-white'
-                                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                                }`}
-                                            >
-                                                <ArrowUp size={32} />
-                                                <span className="mt-2">
-                                                    Up (1.8x)
-                                                </span>
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    handleOptionSelect('equal')
-                                                }
-                                                className={`p-6 rounded-lg font-bold text-lg transition duration-200 flex flex-col items-center ${
-                                                    selectedOption === 'equal'
-                                                        ? 'bg-blue-600 text-white'
-                                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                                }`}
-                                            >
-                                                <Equal size={32} />
-                                                <span className="mt-2">
-                                                    Equal (5.8x)
-                                                </span>
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    handleOptionSelect('down')
-                                                }
-                                                className={`p-6 rounded-lg font-bold text-lg transition duration-200 flex flex-col items-center ${
-                                                    selectedOption === 'down'
-                                                        ? 'bg-red-600 text-white'
-                                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                                }`}
-                                            >
-                                                <ArrowDown size={32} />
-                                                <span className="mt-2">
-                                                    Down (1.8x)
-                                                </span>
-                                            </button>
                                         </div>
 
                                         {error && (
@@ -307,7 +275,7 @@ const GameBoard = () => {
                                 <div className="hidden lg:block">
                                     <WalletSection />
                                 </div>
-                                <GameHistory gameType="upDownEqual" />
+                                <GameHistory gameType="diceSum" />
                             </div>
                         </div>
                     </div>
@@ -317,4 +285,4 @@ const GameBoard = () => {
     )
 }
 
-export default GameBoard
+export default DiceSumGame

@@ -41,7 +41,7 @@ const WalletSection = () => {
                 <div className="bg-gray-700 p-4 rounded-lg">
                     <p className="text-gray-400">Current Balance</p>
                     <p className="text-3xl font-bold text-green-400">
-                        ${balance.toFixed(2)}
+                        ₹{balance.toFixed(2)}
                     </p>
                 </div>
 

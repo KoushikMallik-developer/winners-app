@@ -1,36 +1,54 @@
-// src/store/gameSlice.js
+// src/store/slices/gameSlice.js
 import { createSlice } from '@reduxjs/toolkit'
 
 const gameSlice = createSlice({
     name: 'game',
     initialState: {
-        stake: 0,
-        selectedOption: null,
-        diceResults: [],
-        gameHistory: [],
-        isRolling: false,
+        diceSum: {
+            stake: 0,
+            selectedOption: null,
+            diceResults: [],
+            gameHistory: [],
+            isRolling: false,
+        },
+        upDownEqual: {
+            stake: 0,
+            selectedOption: null,
+            diceResults: [],
+            gameHistory: [],
+            isRolling: false,
+        },
     },
     reducers: {
         setStake: (state, action) => {
-            state.stake = action.payload
+            const { gameType, amount } = action.payload
+            state[gameType].stake = amount
         },
         setSelectedOption: (state, action) => {
-            state.selectedOption = action.payload
+            const { gameType, option } = action.payload
+            state[gameType].selectedOption = option
         },
         setDiceResults: (state, action) => {
-            state.diceResults = action.payload
+            const { gameType, results } = action.payload
+            state[gameType].diceResults = results
         },
         addToHistory: (state, action) => {
-            state.gameHistory.unshift(action.payload)
+            const { gameType, gameData } = action.payload
+            state[gameType].gameHistory.unshift(gameData)
         },
         setIsRolling: (state, action) => {
-            state.isRolling = action.payload
+            const { gameType, isRolling } = action.payload
+            state[gameType].isRolling = isRolling
         },
-        resetGame: (state) => {
-            state.stake = 0
-            state.selectedOption = null
-            state.diceResults = []
-            state.isRolling = false
+        resetGame: (state, action) => {
+            const { gameType } = action.payload
+            state[gameType] = {
+                stake: 0,
+                selectedOption: null,
+                diceResults: [],
+                gameHistory: state[gameType].gameHistory, // Preserve game history
+                isRolling: false,
+            }
         },
     },
 })
@@ -43,4 +61,5 @@ export const {
     setIsRolling,
     resetGame,
 } = gameSlice.actions
+
 export default gameSlice.reducer

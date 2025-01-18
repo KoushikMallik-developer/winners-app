@@ -9,8 +9,7 @@ const WalletPage = () => {
     const [error, setError] = useState('')
     const dispatch = useDispatch()
     const navigate = useNavigate()
-    const { balance } = useSelector((state) => state.wallet)
-    const { transactions } = useSelector((state) => state.wallet)
+    const { balance, transactions } = useSelector((state) => state.wallet)
 
     const handleTransaction = (type) => {
         const value = Number(amount)
@@ -55,7 +54,7 @@ const WalletPage = () => {
                             <div className="bg-gray-700 p-6 rounded-lg">
                                 <p className="text-gray-400">Current Balance</p>
                                 <p className="text-4xl font-bold text-green-400">
-                                    ${balance.toFixed(2)}
+                                    ₹{balance.toFixed(2)}
                                 </p>
                             </div>
 
@@ -121,7 +120,7 @@ const WalletPage = () => {
                                                 {tx.type === 'deposit'
                                                     ? '+'
                                                     : '-'}
-                                                ${tx.amount.toFixed(2)}
+                                                ₹{tx.amount.toFixed(2)}
                                             </span>
                                         </div>
                                         <p className="text-gray-500 text-sm">

@@ -31,7 +31,8 @@ const Navbar = () => {
     ]
 
     const privateLinks = [
-        { path: '/game', label: 'Game Board' },
+        { path: '/game', label: 'Up or Down' },
+        { path: '/dice-sum', label: 'Dice Sum' },
         { path: '/wallet', label: 'Wallet' },
         { path: '/history', label: 'History' },
     ]
